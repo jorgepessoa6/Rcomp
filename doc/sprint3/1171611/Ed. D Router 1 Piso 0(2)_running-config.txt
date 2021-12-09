@@ -1,0 +1,241 @@
+!
+version 12.4
+no service timestamps log datetime msec
+no service timestamps debug datetime msec
+no service password-encryption
+!
+hostname Router
+!
+!
+!
+!
+!
+ip dhcp pool D_Floor0
+ network 10.166.230.64 255.255.255.192
+ default-router 10.166.230.120
+ dns-server 10.166.231.1
+ domain-name building-d.rcomp-19-20-df-g4
+ip dhcp pool D_Floor1
+ network 10.166.230.0 255.255.255.192
+ default-router 10.166.230.52
+ dns-server 10.166.231.1
+ domain-name building-d.rcomp-19-20-df-g4
+ip dhcp pool D_Wifi
+ network 10.166.230.192 255.255.255.192
+ default-router 10.166.230.254
+ dns-server 10.166.231.1
+ domain-name building-d.rcomp-19-20-df-g4
+ip dhcp pool D_VoIP
+ network 10.166.230.128 255.255.255.224
+ default-router 10.166.230.155
+ option 150 ip 10.166.230.155
+ dns-server 10.166.231.1
+ domain-name building-d.rcomp-19-20-df-g4
+!
+!
+!
+no ip cef
+no ipv6 cef
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+spanning-tree mode pvst
+!
+!
+!
+!
+!
+!
+interface FastEthernet0/0
+ no ip address
+ duplex auto
+ speed auto
+ shutdown
+!
+interface FastEthernet0/1
+ no ip address
+ duplex auto
+ speed auto
+ shutdown
+!
+interface FastEthernet1/0
+ no ip address
+!
+interface FastEthernet1/0.331
+ no ip address
+!
+interface FastEthernet1/0.345
+ encapsulation dot1Q 345
+ ip address 10.166.230.120 255.255.255.192
+!
+interface FastEthernet1/0.346
+ encapsulation dot1Q 346
+ ip address 10.166.230.52 255.255.255.192
+!
+interface FastEthernet1/0.347
+ encapsulation dot1Q 347
+ ip address 10.166.230.254 255.255.255.192
+!
+interface FastEthernet1/0.348
+ encapsulation dot1Q 348
+ ip address 10.166.231.252 255.255.255.0
+!
+interface FastEthernet1/0.349
+ encapsulation dot1Q 349
+ ip address 10.166.230.155 255.255.255.224
+!
+interface FastEthernet1/0.355
+ encapsulation dot1Q 355
+ ip address 10.166.234.21 255.255.255.128
+!
+interface Vlan1
+ no ip address
+ shutdown
+!
+router ospf 404
+ log-adjacency-changes
+ network 100.166.234.0 0.0.1.255 area 0
+ network 10.166.234.0 0.0.1.255 area 0
+ network 10.166.230.0 0.0.1.255 area 4
+!
+router rip
+ network 10.0.0.0
+!
+ip nat inside source static tcp 10.166.231.6 80 10.166.234.21 80 
+ip nat inside source static tcp 10.166.231.6 443 10.166.234.21 443 
+ip nat inside source static udp 10.166.231.1 53 10.166.234.21 53 
+ip nat inside source static tcp 10.166.231.1 53 10.166.234.21 53 
+ip classless
+!
+ip flow-export version 9
+!
+!
+ip access-list extended PISO1
+ deny ip any 10.166.230.0 0.0.0.63
+ permit icmp any any
+ permit udp host 0.0.0.0 host 255.255.255.255
+ deny ip any host 10.166.230.120
+ deny ip any host 10.166.230.52
+ deny ip any host 10.166.230.254
+ deny ip any host 10.166.231.252
+ deny ip any host 10.166.230.155
+ deny ip any host 10.166.234.21
+ permit ip any any
+ip access-list extended PISO0
+ deny ip any 10.166.230.64 0.0.0.63
+ permit icmp any any
+ permit udp host 0.0.0.0 host 255.255.255.255
+ deny ip any host 10.166.230.120
+ deny ip any host 10.166.230.52
+ deny ip any host 10.166.230.254
+ deny ip any host 10.166.231.252
+ deny ip any host 10.166.230.155
+ deny ip any host 10.166.234.21
+ permit ip any any
+ip access-list extended WIFI
+ deny ip any 10.166.230.192 0.0.0.63
+ permit icmp any any
+ permit udp host 0.0.0.0 host 255.255.255.255
+ deny ip any host 10.166.230.120
+ deny ip any host 10.166.230.52
+ deny ip any host 10.166.230.254
+ deny ip any host 10.166.231.252
+ deny ip any host 10.166.230.155
+ deny ip any host 10.166.234.21
+ permit ip any any
+ip access-list extended DMZ
+ deny ip any 10.166.231.0 0.0.0.255
+ permit icmp any any
+ permit tcp any host 10.166.234.21 eq www
+ permit tcp any host 10.166.234.21 eq 443
+ permit tcp any host 10.166.234.21 eq domain
+ permit udp any host 10.166.234.21 eq domain
+ permit ip 10.166.231.0 0.0.0.255 any
+ deny ip any host 10.166.230.120
+ deny ip any host 10.166.230.52
+ deny ip any host 10.166.230.254
+ deny ip any host 10.166.231.252
+ deny ip any host 10.166.230.155
+ deny ip any host 10.166.234.21
+ permit ip any any
+ip access-list extended VOIP
+ deny ip any 10.166.230.128 0.0.0.31
+ permit icmp any any
+ permit udp host 0.0.0.0 host 255.255.255.255
+ permit tcp any host 10.166.230.160 eq 2000
+ permit udp any host 10.166.230.160 eq tftp
+ deny ip any host 10.166.230.120
+ deny ip any host 10.166.230.52
+ deny ip any host 10.166.230.254
+ deny ip any host 10.166.231.252
+ deny ip any host 10.166.230.155
+ deny ip any host 10.166.234.21
+ permit ip any any
+ip access-list extended BACKBONE
+ deny ip any 10.166.230.0 0.0.0.255
+ deny ip any 10.166.231.0 0.0.0.255
+ permit ospf any host 224.0.0.5
+ permit ospf any host 224.0.0.6
+ permit ospf any host 10.166.234.21
+ permit icmp any any
+ permit tcp any host 10.166.234.21 eq www
+ permit tcp any host 10.166.234.21 eq 443
+ permit udp any host 10.166.234.21 eq domain
+ permit tcp any host 10.166.234.21 eq domain
+ deny ip any host 10.166.230.120
+ deny ip any host 10.166.230.52
+ deny ip any host 10.166.230.254
+ deny ip any host 10.166.231.252
+ deny ip any host 10.166.230.155
+ deny ip any host 10.166.234.21
+ permit ip any any
+!
+!
+!
+!
+!
+!
+telephony-service
+ no auto-reg-ephone
+ max-ephones 25
+ max-dn 25
+ ip source-address 10.166.230.155 port 2000
+!
+ephone-dn 1
+ number 4001
+!
+ephone-dn 2
+ number 4002
+!
+ephone 1
+ device-security-mode none
+ mac-address 00D0.D3C7.0192
+ type 7960
+ button 1:1
+!
+ephone 2
+ device-security-mode none
+ mac-address 0010.11A2.4DAC
+ type 7960
+ button 1:2
+!
+line con 0
+!
+line aux 0
+!
+line vty 0 4
+ login
+!
+!
+!
+end
+
